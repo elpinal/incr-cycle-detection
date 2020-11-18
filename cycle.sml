@@ -5,6 +5,8 @@ functor Cycle (X : sig type t end) :> sig
   exception SelfRef of vertex * vertex
   exception Cycle   of vertex * vertex
 
+  val from_vertex : graph -> vertex -> X.t
+
   val make_vertices : X.t list -> graph * vertex list
 
   val add_edge : graph -> vertex -> vertex -> unit
@@ -45,6 +47,9 @@ end = struct
 
   fun get g v : cell =
     Vector.sub (g, v)
+
+  fun from_vertex (g : graph) (v : vertex) =
+    #content (get g v)
 
   fun add_out (c : cell) (v : vertex) : unit =
     #outgoing c := v :: !(#outgoing c)
