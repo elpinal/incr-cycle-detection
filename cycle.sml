@@ -10,6 +10,8 @@ functor Cycle (X : sig type t end) :> sig
   val make_vertices : X.t list -> graph * vertex list
 
   val add_edge : graph -> vertex -> vertex -> unit
+
+  val sort : graph -> X.t list
 end = struct
   type vertex = int
 
@@ -155,4 +157,41 @@ end = struct
     then add_in c2 v
     else ()
   end handle Success => ()
+
+  fun visit g v L =
+  let
+    val c = get g v
+  in
+    if !(#mark c) = Mark.current ()
+    then L
+    else
+      let
+        val L = foldl (fn (w, acc) => visit g w acc) L (!(#outgoing c))
+      in
+        #mark c := Mark.current ();
+        #content c :: L
+      end
+  end
+
+  fun sort' _ [] L = L
+    | sort' g (x :: xs) L =
+    let
+      val c = get g x
+    in
+      if !(#mark c) = Mark.current ()
+      then sort' g xs L
+      else
+        let val L = visit g x L in
+          sort' g xs L
+        end
+    end
+
+  fun sort g =
+  let
+    val () = Mark.incr ()
+    val n = Vector.length g
+    val vs = List.tabulate (n, fn x => x)
+  in
+    sort' g vs []
+  end
 end
